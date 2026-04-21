@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import dblquad
 import matplotlib.pyplot as plt
 
 class ForceGenerator:
@@ -36,7 +37,6 @@ class ForceGenerator:
         self.shear_x_signs = np.random.choice([-1, 1], self.n_peaks)
         self.shear_y_signs = np.random.choice([-1, 1], self.n_peaks)
 
-        # todo normalize forces!
 
     def show(self):
         # Grid
@@ -89,31 +89,3 @@ class ForceGenerator:
     def shear_y(self, x, y):
         # Return the y component of the shear at a given point
         return self.sample_distr(x, y, self.centers_x, self.centers_y, self.sigma_x)
-
-    
-
-
-# # 1. Normaalkracht (altijd positief/optellen)
-# for cx, cy, si in zip(centers_x, centers_y, sigma_n):
-#     N_peak = np.exp(-((X - cx)**2 + (Y - cy)**2) / (2 * si**2))
-#     N_total += N_peak
-
-# # 2. Schuifkracht X (willekeurig optellen of aftrekken)
-# for cx, cy, si in zip(centers_x, centers_y, sigma_x):
-#     # np.random.choice([1, -1]) bepaalt of de piek omhoog of omlaag wijst
-#     direction = np.random.choice([1, -1])
-#     X_peak = direction * np.exp(-((X - cx)**2 + (Y - cy)**2) / (2 * si**2))
-#     X_total += X_peak
-
-# # 3. Schuifkracht Y (willekeurig optellen of aftrekken)
-# for cx, cy, si in zip(centers_x, centers_y, sigma_y):
-#     direction = np.random.choice([1, -1])
-#     Y_peak = direction * np.exp(-((X - cx)**2 + (Y - cy)**2) / (2 * si**2))
-#     Y_total += Y_peak
-
-# # Normaliseren
-# # Let op: bij schuifkrachten gebruiken we de som van de absolute waarden 
-# # om te voorkomen dat we delen door bijna nul als pieken elkaar opheffen.
-# N_total = (N_total / np.abs(N_total).sum()) * totale_kracht
-# X_total = (X_total / np.abs(X_total).sum()) * totale_schuifkracht_x
-# Y_total = (Y_total / np.abs(Y_total).sum()) * totale_schuifkracht_y
