@@ -45,10 +45,22 @@ def solve_module(force_vec):
 def get_triangle_center(i, j):
     # Get triangle center coordinates from indices
     x = i * side_length/2
-    if (i + j % 2 == 0):
+    if ((i + j) % 2 == 0):
         return (x, (1/3 + j)*t_height)
     else:
         return (x, (2/3 + j)*t_height)
+    
+def get_triangle_vertices(i, j):
+    (c_x, c_y) = get_triangle_center(i, j)
+    v_x = [c_x, c_x + 0.5*side_length, c_x - 0.5*side_length]
+    if ((i + j) % 2 == 0):
+        v_y = [c_y + (2/3) * t_height, c_y - t_height/3, c_y - t_height/3]
+    else:
+        v_y = [c_y - (2/3) * t_height, c_y + t_height/3, c_y + t_height/3]
+
+    return (v_x, v_y)
+        
+        
 
 
 def main():
