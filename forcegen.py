@@ -31,8 +31,8 @@ class ForceGenerator:
         self.r_max = self.area
 
         # Select random peak locations
-        self.centers_x = np.random.uniform(-self.r_max* self.safe_distance, self.r_max * self.safe_distance, self.n_peaks)
-        self.centers_y = np.random.uniform(-self.r_max* self.safe_distance, self.r_max * self.safe_distance, self.n_peaks)
+        self.centers_x = np.random.uniform(self.safe_distance, self.r_max - self.safe_distance, self.n_peaks)
+        self.centers_y = np.random.uniform(self.safe_distance, self.r_max - self.safe_distance, self.n_peaks)
         
         self.shear_x_signs = np.random.choice([-1, 1], self.n_peaks)
         self.shear_y_signs = np.random.choice([-1, 1], self.n_peaks)
@@ -40,8 +40,8 @@ class ForceGenerator:
 
     def show(self):
         # Grid
-        x = np.linspace(-self.r_max, self.r_max, self.grid_size)
-        y = np.linspace(-self.r_max, self.r_max, self.grid_size)
+        x = np.linspace(0, self.r_max, self.grid_size)
+        y = np.linspace(0, self.r_max, self.grid_size)
         X, Y = np.meshgrid(x, y)
         N_total = self.normal(X, Y)
         X_total = self.shear_x(X, Y)
@@ -84,8 +84,8 @@ class ForceGenerator:
     
     def shear_x(self, x, y):
         # Return the x component of the shear at a given point
-        return self.sample_distr(x, y, self.centers_x, self.centers_y, self.sigma_x)
+        return self.sample_distr(x, y, self.centers_x, self.centers_y, self.sigma_x, self.shear_x_signs)
     
     def shear_y(self, x, y):
         # Return the y component of the shear at a given point
-        return self.sample_distr(x, y, self.centers_x, self.centers_y, self.sigma_x)
+        return self.sample_distr(x, y, self.centers_x, self.centers_y, self.sigma_x, self.shear_y_signs)

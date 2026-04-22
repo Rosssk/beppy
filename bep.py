@@ -42,7 +42,7 @@ def solve_module(force_vec):
     shifted_offset = p.bodies['B'].rotmat@np.array([0, 15*mm, -3*cm]) + p.bodies['B'].position
     return (shifted_center, shifted_offset)
 
-def get_center(i, j):
+def get_triangle_center(i, j):
     # Get triangle center coordinates from indices
     x = i * side_length/2
     if (i + j % 2 == 0):
@@ -52,8 +52,9 @@ def get_center(i, j):
 
 
 def main():
-    forceg = ForceGenerator(0.6, 0.0075, 0.025, 1, 0.05, 80)
-    grid_size = 15
+    grid_size = 10
+    forceg = ForceGenerator(0.005, 0.0075, 0.025, 3, t_height*grid_size, 80)
+    # forceg.show()
     t_area = 0.5 * t_height * side_length
 
     c_x = []
@@ -63,7 +64,7 @@ def main():
     # Ga langs (grid_size X grid_size) driehoekjes
     for i in tqdm(range(grid_size)):
         for j in tqdm(range(grid_size), leave=False):
-            (x, y) = get_center(i, j)
+            (x, y) = get_triangle_center(i, j)
             # todo better surface integration approximation
             force_vector = (forceg.shear_x(x, y), forceg.shear_y(x, y), -forceg.normal(x, y))
             p = init_rbm()
