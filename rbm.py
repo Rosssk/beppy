@@ -1,5 +1,5 @@
 #
-# Copied from https://github.com/dmsyaifoel/pyRBM/tree/main
+# (Modified) from https://github.com/dmsyaifoel/pyRBM/tree/main
 #
 
 from numpy import zeros, array, sin, cos, acos, dot

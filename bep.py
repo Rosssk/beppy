@@ -43,7 +43,7 @@ def solve_module(force_vec):
     return (shifted_center, shifted_offset)
 
 def get_triangle_center(i, j):
-    # Get triangle center coordinates from indices
+    # Get center coordinate of triangle at index (i, j)
     x = i * side_length/2
     if ((i + j) % 2 == 0):
         return (x, (1/3 + j)*t_height)
@@ -51,6 +51,7 @@ def get_triangle_center(i, j):
         return (x, (2/3 + j)*t_height)
     
 def get_triangle_vertices(i, j):
+    # Get corner coordinates of triangle at index (i, j)
     (c_x, c_y) = get_triangle_center(i, j)
     v_x = [c_x, c_x + 0.5*side_length, c_x - 0.5*side_length]
     if ((i + j) % 2 == 0):
@@ -59,9 +60,6 @@ def get_triangle_vertices(i, j):
         v_y = [c_y - (2/3) * t_height, c_y + t_height/3, c_y + t_height/3]
 
     return (v_x, v_y)
-        
-        
-
 
 def main():
     grid_size = 10
