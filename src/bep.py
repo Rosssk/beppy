@@ -1,7 +1,7 @@
-from forcegen import ForceGenerator
+from src.forcegen import ForceGenerator
 import numpy as np
 from numpy import cos, sin, pi
-from rbm import PRBM
+from src.rbm import PRBM
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
