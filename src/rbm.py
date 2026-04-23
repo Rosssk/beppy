@@ -302,18 +302,20 @@ class PRBM:
       self.add_torque_y(bodyname, torque[1])
       self.add_torque_z(bodyname, torque[2])
 
-  def solve_pose(self, bodynames, A, E, I, method=None):
+  def solve_pose(self, bodynames, A, E, I, method=None, x0=None]):
     # solve pose of all bodies in the list bodynames
     # using minimization of the total energy
 
     free_bodies = []
-    x0 = []
 
-    for bodyname in bodynames:
-      body = self.bodies[bodyname]
-      free_bodies.append(body)
-      if self.dim == 2: x0 = x0 + list(body.position) + [body.angles]
-      if self.dim == 3: x0 = x0 + list(body.position) + list(body.angles)
+    if (x0 is None):
+      x0 = []
+
+      for bodyname in bodynames:
+        body = self.bodies[bodyname]
+        free_bodies.append(body)
+        if self.dim == 2: x0 = x0 + list(body.position) + [body.angles]
+        if self.dim == 3: x0 = x0 + list(body.position) + list(body.angles)
 
     n_free_bodies = len(free_bodies)
 

@@ -11,7 +11,6 @@ class TriangleGrid:
         if (i > self.grid_size - 1 or j > self.grid_size - 1):
             raise Exception(f"Index ({i}, {j}) is out of bounds for {self.grid_size}*{self.grid_size} grid")
 
-
     # Get center coordinate of triangle at index (i, j)
     def get_triangle_center(self, i, j):
         self._bounds_check(i, j)
@@ -37,7 +36,7 @@ class TriangleGrid:
 
     # get the width of this triangle grid
     def width(self):
-        return self.grid_size * self.t_side
+        return self.grid_size * self.t_side * 0.5
 
     # get height of this triangle grid
     def height(self):

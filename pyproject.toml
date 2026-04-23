@@ -11,3 +11,30 @@ dependencies = [
     "scipy>=1.17.1",
     "tqdm>=4.67.3",
 ]
+
+[tool.pyright]
+include = ["src"]
+exclude = [
+    "**/.*",
+    ".venv",
+    "**/node_modules",
+    "**/__pycache__",
+    "src/experimental",
+    "src/typestubs"
+]
+
+defineConstant = { DEBUG = true }
+stubPath = "src/stubs"
+
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+pythonVersion = "3.13"
+pythonPlatform = "Linux"
+
+executionEnvironments = [
+  { root = "src/web", pythonVersion = "3.5", pythonPlatform = "Windows", extraPaths = [ "src/service_libs" ], reportMissingImports = "warning" },
+  { root = "src/sdk", pythonVersion = "3.0", extraPaths = [ "src/backend" ] },
+  { root = "src/tests", extraPaths = ["src/tests/e2e", "src/sdk" ]},
+  { root = "src" }
+]
