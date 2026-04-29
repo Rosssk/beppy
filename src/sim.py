@@ -1,3 +1,5 @@
+# pyright: strict
+
 from rbm import PRBM
 import numpy as np
 from numpy import cos, sin, pi
@@ -10,7 +12,7 @@ def init_rbm():
 
     p.add_body('A', (0, 0, 0))
     p.add_body('B', (0, 0, 15*mm))
-    p.add_body('C', (0, 0, 3*cm))
+    p.add_body('C', (0, 0, 30*mm))
 
     n = 3
     r = 14*mm
@@ -27,9 +29,9 @@ def solve_module(force_vec, x0):
     mm = 1e-3
     cm = 1e-2
     t = 1e-3
-    A = pi*t**2
-    E = 1650e6 # Pa
-    I = pi*t**4/2
+    A = 1*pi*t**2
+    E = 3650e6 # Pa
+    I = 10*pi*t**4/2
 
     p = init_rbm()
     p.add_force('C', force_vec)

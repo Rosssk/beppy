@@ -22,8 +22,12 @@ def R(t):
 
 # rotation matrix for a list of angles in 3d, or one angle in 2d
 def rotmat(angles, dim):
-  if dim == 2: return R(angles)
-  if dim == 3: return RX(angles[0])@RY(angles[1])@RZ(angles[2])
+  if dim == 2: 
+    return R(angles)
+  elif dim == 3: 
+    return RX(angles[0])@RY(angles[1])@RZ(angles[2])
+  else: 
+    raise ValueError("Unsupported dimension")
 
 def RX(t): # 3d rotation matrix around x
   return array([[1, 0, 0], [0, cos(t), -sin(t)], [0, sin(t), cos(t)]])
@@ -302,20 +306,22 @@ class PRBM:
       self.add_torque_y(bodyname, torque[1])
       self.add_torque_z(bodyname, torque[2])
 
-  def solve_pose(self, bodynames, A, E, I, method=None, x0=None]):
+  def solve_pose(self, bodynames, A, E, I, method=None, x0=None):
     # solve pose of all bodies in the list bodynames
     # using minimization of the total energy
 
     free_bodies = []
+    x0_def = []
+    for bodyname in bodynames:
+      body = self.bodies[bodyname]
+      free_bodies.append(body)
+      if self.dim == 2: x0_def = x0_def + list(body.position) + [body.angles]
+      if self.dim == 3: x0_def = x0_def + list(body.position) + list(body.angles)
 
-    if (x0 is None):
-      x0 = []
-
-      for bodyname in bodynames:
-        body = self.bodies[bodyname]
-        free_bodies.append(body)
-        if self.dim == 2: x0 = x0 + list(body.position) + [body.angles]
-        if self.dim == 3: x0 = x0 + list(body.position) + list(body.angles)
+    if x0 is None:
+      x0 = x0_def
+    elif len(x0) != len(x0_def):
+      raise ValueError("Inconsistent dimensions for initial guess")
 
     n_free_bodies = len(free_bodies)
 
@@ -326,12 +332,14 @@ class PRBM:
           s2 = 3*i + 2
           p = x[s1:s2]
           a = x[s2]
-        if self.dim == 3:
+        elif self.dim == 3:
           s1 = 6*i
           s2 = 6*i + 3
           s3 = 6*i + 6
           p = x[s1:s2]
           a = x[s2:s3]
+        else:
+          raise ValueError("Unsupported dimension")
         free_bodies[i].move(p, a)
       return self.energy(A, E, I)
 

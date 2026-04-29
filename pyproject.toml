@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "matplotlib>=3.10.8",
+    "mpmath>=1.4.1",
     "numpy>=2.4.4",
     "plotly>=6.7.0",
     "scipy>=1.17.1",
+    "scipy-stubs>=1.17.1.4",
     "tqdm>=4.67.3",
 ]
 

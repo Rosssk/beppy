@@ -8,7 +8,7 @@ class TriangleGrid:
         self.t_height = np.sqrt(3)/2 * self.t_side
     
     def _bounds_check(self, i,j):
-        if (i > self.grid_size - 1 or j > self.grid_size - 1):
+        if (i > self.grid_size*2 - 1 or j > self.grid_size - 1):
             raise Exception(f"Index ({i}, {j}) is out of bounds for {self.grid_size}*{self.grid_size} grid")
 
     # Get center coordinate of triangle at index (i, j)

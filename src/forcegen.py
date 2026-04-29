@@ -3,15 +3,13 @@
 import numpy as np
 import numpy.typing as npt
 from typing import TypeAlias
-
-from scipy.integrate import dblquad
 import matplotlib.pyplot as plt
 
 ndfloat: TypeAlias = npt.NDArray[np.float64] | float
 ndfloatlist: TypeAlias = npt.NDArray[np.float64] | list[float]
 
 class ForceGenerator:
-    def __init__(self, width: float, height: float, safe_distance: float, s_min: float, s_max: float, n_peaks_max: int, min_normal:float = 5, max_normal:float = 15, min_x_shear: float = 0, max_x_shear: float = 0, min_y_shear: float = 0, max_y_shear:float = 0):
+    def __init__(self, width: float, height: float, safe_distance: float, s_min: float, s_max: float, n_peaks_max: int, min_normal:float = 0, max_normal:float = 50, min_x_shear: float = -5, max_x_shear: float = 5, min_y_shear: float = -10, max_y_shear:float = 10):
         """Create ForceGenerator instance
 
         Args:
@@ -92,9 +90,6 @@ class ForceGenerator:
         ax3 = fig.add_subplot(133, projection='3d')
         ax3.plot_surface(X, Y, Y_total, cmap='viridis')
         ax3.set_title(f'Schuifkrachten Y (Netto)\n{self.totale_schuifkracht_y:.1f}N')
-
-        plt.tight_layout()
-        plt.show()
 
     def sample_distr(self, x: ndfloat, y: ndfloat, centers_x: ndfloatlist, centers_y: ndfloatlist, sigma: ndfloatlist, scales: ndfloatlist, signs: ndfloatlist=[]):
         if len(signs) == 0:
