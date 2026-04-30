@@ -1,82 +1,98 @@
+# pyright: strict
+
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
+from scipy.interpolate import RegularGridInterpolator
 
-# --- FUNCTIES ---
-def generate_normal_force(x, y, x0, y0, rx, ry, smoothness=1.0, sphere_factor=1.2, peak_val=1.0):
-    d_sq = ((x - x0)**2 / rx**2) + ((y - y0)**2 / ry**2)
-    d_sq = np.clip(d_sq, 0, 1)
-    z_norm = np.sqrt(1 - d_sq**sphere_factor)
-    z_norm[d_sq >= 1] = 0
-    noise = np.random.normal(0, 0.02, x.shape)
-    z_norm = np.where(z_norm > 0, z_norm + noise, 0)
-    z_norm_smooth = gaussian_filter(z_norm, sigma=smoothness)
-    z_norm_smooth[d_sq > 0.95] = 0
-    z_norm_smooth = np.maximum(z_norm_smooth, 0)
-    return z_norm_smooth * peak_val, d_sq
 
-def generate_shear_force(x, y, d_sq, peak_val):
-    raw_profile = (d_sq**0.3) * ((1.0 - d_sq)**0.3)
-    max_raw = np.max(raw_profile) if np.max(raw_profile) > 0 else 1
-    normalized_profile = raw_profile / max_raw
-    shear_noise = np.random.normal(0, 0.01, x.shape)
-    shear_val = np.where(d_sq < 1.0, (normalized_profile + shear_noise) * peak_val, 0)
-    return np.maximum(shear_val, 0)
+class ForceGenerator2:
+    def __init__(self, width: float, height: float, safety_margin: float, r_min: float, r_max: float, smoothness: float = 1.2, sphere_factor: float = 1.2, normal_peak: float = 125000, shear_peak: float = 2500):
+        """Create source for random force distributions
 
-# 1. Setup Grid
-resolution = 0.0025 
-side_range = np.arange(0, 0.1 + resolution, resolution)
-x, y = np.meshgrid(side_range, side_range)
+        Args:
+            width: Width of region
+            height: Height of region
+            safety_margin: Distance from edge that the centre of a force area should be
+            r_min: Minimum radius of force area
+            r_max: Maximum radius of force area
+            smoothness: todo, Defaults to 1.2.
+            sphere_factor: todo. Defaults to 1.2.
+            normal_peak: Peak normal force. Defaults to 125000.
+            shear_peak: Peak shear force. Defaults to 2500.
+        """
+        
+        self.width: float = width
+        self.height: float = height
+        self.safety_margin: float = safety_margin
+        self.r_min: float = r_min
+        self.r_max: float = r_max
+        self.smoothness: float = smoothness
+        self.sphere_factor: float = sphere_factor
+        self.normal_peak: float = normal_peak
+        self.shear_peak: float = shear_peak
+        self.reroll()
 
-# 2. Randomize Parameters
-x0, y0 = np.random.uniform(0.03, 0.07, 2)
-rx, ry = np.random.uniform(0.02, 0.03, 2)
+    def __call__(self, x: float, y: float):
+        x0, y0, rx, ry = self.x0, self.y0, self.rx, self.ry
 
-# 3. Kracht basisinstellingen
-normal_peak_val = 125000 
-shear_peak_val  = 2500   
+        d_sq = ((x - x0)**2 / rx**2) + ((y - y0)**2 / ry**2)
+        normal = math.sqrt(1 - math.pow(min(1, d_sq), self.sphere_factor)) * self.normal_peak
+        if normal > 0:
+            normal *= 1 + np.random.normal(0, 0.05)
 
-# 4. Data Genereren
-z_normal, d_sq = generate_normal_force(x, y, x0, y0, rx, ry, smoothness=1.2, peak_val=normal_peak_val)
-z_shear_mag_raw = generate_shear_force(x, y, d_sq, shear_peak_val)
+        if d_sq < 1:
+            shear = (math.pow(d_sq, 0.3) + math.pow((1.0 - d_sq), 0.3)) / (math.pow(0.5, 0.6))
+            dx, dy = x - x0, y - y0
+            dist = math.sqrt(dx**2 + dy**2)
+            shear_x = shear * (dx / dist)
+            shear_y = shear * (dy / dist)
 
-# 5. Vector Decompositie (Richting naar centrum)
-dx, dy = x0 - x, y0 - y
-dist = np.sqrt(dx**2 + dy**2); dist[dist==0]=1e-10
-z_shear_x = z_shear_mag_raw * (dx / dist)
-z_shear_y = z_shear_mag_raw * (dy / dist)
+            shear_x *= 1 + np.random.normal(0, 0.05)
+            shear_y *= 1 + np.random.normal(0, 0.05)
 
-# 6. Zwaartekracht (Toevoegen aan Y)
-r_avg = (rx + ry) / 2.0
-g_total = 150 * (r_avg / 0.03)**2 + np.random.uniform(-25, 25)
-z_shear_y_final = np.where(d_sq < 1.0, z_shear_y + (g_total * 200), 0)
+            # shear_y += self.g_total * 200
+        else:
+            shear_x = 0
+            shear_y = 0
 
-# --- 7. PLOTTING ---
-def get_sym_lim(data):
-    limit = np.max(np.abs(data)) if np.max(np.abs(data)) > 0 else 1
-    return -limit, limit
+        return normal, shear_x, shear_y
 
-fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+    def show(self):
+        resolution = 0.0025
+        x_range = np.arange(0, self.width + resolution, resolution)
+        y_range = np.arange(0, self.height + resolution, resolution)
+        X, Y = np.meshgrid(x_range, y_range)
 
-# Map 1: Normale Kracht
-im1 = axes[0].pcolormesh(x, y, z_normal, cmap='viridis', shading='auto')
-axes[0].set_title("Normale Kracht ($N/m^2$)")
-axes[0].set_aspect('equal')
-fig.colorbar(im1, ax=axes[0])
+        normal_grid, shear_x_grid, shear_y_grid = np.vectorize(self, otypes=[float, float, float])(X, Y)
 
-# Map 2: Schuifkracht X-Component
-lx, hx = get_sym_lim(z_shear_x)
-im2 = axes[1].pcolormesh(x, y, z_shear_x, cmap='RdBu_r', shading='auto', vmin=lx, vmax=hx)
-axes[1].set_title("Schuifkracht X-Component\n(Wit = 0)")
-axes[1].set_aspect('equal')
-fig.colorbar(im2, ax=axes[1])
+        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
 
-# Map 3: Schuifkracht Y-Component (Inclusief Zwaartekracht)
-ly, hy = get_sym_lim(z_shear_y_final)
-im3 = axes[2].pcolormesh(x, y, z_shear_y_final, cmap='RdBu_r', shading='auto', vmin=ly, vmax=hy)
-axes[2].set_title(f"Schuifkracht Y-Component\n(Incl. {g_total:.1f}g)")
-axes[2].set_aspect('equal')
-fig.colorbar(im3, ax=axes[2])
+        # Map 1: Normale Kracht
+        im1 = axes[0].pcolormesh(X, Y, normal_grid, cmap='viridis', shading='auto')
+        axes[0].set_title("Normale Kracht ($N/m^2$)")
+        axes[0].set_aspect('equal')
+        fig.colorbar(im1, ax=axes[0])
 
-plt.tight_layout()
-plt.show()
+        # Map 2: Schuifkracht X-Component
+        im2 = axes[1].pcolormesh(X, Y, shear_x_grid, cmap='RdBu_r', shading='auto', vmin=np.min(shear_x_grid), vmax=np.max(shear_x_grid))
+        axes[1].set_title("Schuifkracht X-Component\n(Wit = 0)")
+        axes[1].set_aspect('equal')
+        fig.colorbar(im2, ax=axes[1])
+
+        # Map 3: Schuifkracht Y-Component (Inclusief Zwaartekracht)
+        im3 = axes[2].pcolormesh(X, Y, shear_y_grid, cmap='RdBu_r', shading='auto', vmin=np.min(shear_y_grid), vmax=np.max(shear_y_grid))
+        axes[2].set_title(f"Schuifkracht Y-Component\n(Incl. {self.g_total:.1f}g)")
+        axes[2].set_aspect('equal')
+        fig.colorbar(im3, ax=axes[2])
+
+        plt.tight_layout()
+        plt.show()
+
+def main():
+    ForceGenerator2(0.3, 0.3, 0.03, 0.01, 0.05).show()
+
+
+if __name__ == "__main__":
+    main()

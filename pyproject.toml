@@ -5,12 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "gpytorch>=1.15.2",
     "matplotlib>=3.10.8",
-    "mpmath>=1.4.1",
     "numpy>=2.4.4",
+    "opencv-python>=4.13.0.92",
+    "optype>=0.17.0",
     "plotly>=6.7.0",
+    "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "scipy-stubs>=1.17.1.4",
+    "torch>=2.11.0",
     "tqdm>=4.67.3",
 ]
 
@@ -26,17 +30,4 @@ exclude = [
 ]
 
 defineConstant = { DEBUG = true }
-stubPath = "src/stubs"
 
-reportMissingImports = "error"
-reportMissingTypeStubs = false
-
-pythonVersion = "3.13"
-pythonPlatform = "Linux"
-
-executionEnvironments = [
-  { root = "src/web", pythonVersion = "3.5", pythonPlatform = "Windows", extraPaths = [ "src/service_libs" ], reportMissingImports = "warning" },
-  { root = "src/sdk", pythonVersion = "3.0", extraPaths = [ "src/backend" ] },
-  { root = "src/tests", extraPaths = ["src/tests/e2e", "src/sdk" ]},
-  { root = "src" }
-]

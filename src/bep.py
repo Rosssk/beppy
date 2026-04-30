@@ -1,10 +1,9 @@
-from forcegen import ForceGenerator
+from forces1 import ForceGenerator
 import numpy as np
 from numpy import cos, sin, pi
 from rbm import PRBM
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from multipolyfit import multipolyfit
 
 side_length = 1e-2
 t_height = np.sqrt(3)/2 * side_length

@@ -1,5 +1,3 @@
-# pyright: strict
-
 import numpy as np
 import numpy.typing as npt
 from typing import TypeAlias
@@ -26,9 +24,7 @@ class ForceGenerator:
             min_y_shear: _description_. Defaults to 0.
             max_y_shear: _description_. Defaults to 100.
         """
-        # bereik x
         self.width = width
-        # bereik y
         self.height = height
         self.safe_distance = safe_distance
         self.s_min = s_min
