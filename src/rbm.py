@@ -306,7 +306,7 @@ class PRBM:
       self.add_torque_y(bodyname, torque[1])
       self.add_torque_z(bodyname, torque[2])
 
-  def solve_pose(self, bodynames, A, E, I, method=None, x0=None):
+  def solve_pose(self, bodynames, A, E, I, method=None, x0=None, options=None):
     # solve pose of all bodies in the list bodynames
     # using minimization of the total energy
 
@@ -343,7 +343,7 @@ class PRBM:
         free_bodies[i].move(p, a)
       return self.energy(A, E, I)
 
-    self.solution = minimize(optimize_function, x0, method=method)
+    self.solution = minimize(optimize_function, x0, method=method, options=options)
 
     x = self.solution.x
     optimize_function(x) # move bodies to the optimal pose

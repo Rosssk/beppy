@@ -11,6 +11,7 @@ dependencies = [
     "opencv-python>=4.13.0.92",
     "optype>=0.17.0",
     "plotly>=6.7.0",
+    "pydoe3>=1.6.2",
     "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "scipy-stubs>=1.17.1.4",
