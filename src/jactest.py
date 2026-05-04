@@ -65,22 +65,19 @@ class Flexure:
         self.springpoint_globalB = attachpoint_globalB0 + flexure_global0 * -(1 - gamma)/2
 
     def energy_func(self, free_bodies, bodies, A, E, I):
-        if self.bodyA.name in free_bodies and self.bodyB.name in free_bodies:
-            a = free_bodies.index(self.bodyA.name)
-            b = free_bodies.index(self.bodyB.name)
-            return lambda x : self.energy(x[a*6:a*6+3], x[a*6+3:a*6+6], x[b*6:b*6+3], x[b*6+3:b*6+6], A, E, I)
-        elif self.bodyB.name in free_bodies:
-            a = bodies[self.bodyA.name]
-            b = free_bodies.index(self.bodyB.name)
-            return lambda x : self.energy(a.position, a.angles, x[b*6:b*6+3], x[b*6+3:b*6+6], A, E, I)
-        elif self.bodyB.name in free_bodies:
-            a = free_bodies.index(self.bodyA.name)
-            b = bodies[self.bodyB.name]
-            return lambda x : self.energy(x[a*6:a*6+3], x[a*6+3:a*6+6], b.position, b.angles, A, E, I)
-        else:
-            a = bodies[self.bodyA.name]
-            b = bodies[self.bodyB.name]
-            return lambda x : self.energy(a.position, a.angles, b.position, b.angles, A, E, I)    
+        def resolve(body):
+            """Return a callable (x -> (pos, angles)) for a body, fixed or free."""
+            if body.name in free_bodies:
+                i = free_bodies.index(body.name)
+                return lambda x: (x[i*6:i*6+3], x[i*6+3:i*6+6])
+            else:
+                b = bodies[body.name]
+                return lambda x: (b.position, b.angles)
+
+        get_A = resolve(self.bodyA)
+        get_B = resolve(self.bodyB)
+
+        return lambda x: self.energy(*get_A(x), *get_B(x), A, E, I)  
 
     def energy(self, xA, thetaA, xB, thetaB, A, E, I):
         # xA and xB are the positions of body A and B
