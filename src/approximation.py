@@ -7,10 +7,10 @@ N_FZ = 30
 N_FY = 30
 MAX_FZ = 100
 MAX_FY = 40
-MAX_DISP = 5e-3  # m
+MAX_DISP = 5e-3 
 
 def expensive_function(x, show=False, x0=None):
-    r1, r2, r3, h1, h2, E, t, fx, fy, fz = x
+    r1, r2, r3, h1, h2, E, t, fx, fy, fz = x    
     from rbm import PRBM
     from numpy import sin, cos, pi
     Emod = E * 1e9
