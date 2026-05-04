@@ -65,7 +65,7 @@ def main():
     Y = np.linspace(0, MAX_FY, N_FY)
     X = [(r, fz, Y) for fz in np.linspace(0, MAX_FZ, N_FZ)]
 
-    results = process_map(batched, X, max_workers=16, chunksize=1)
+    results = process_map(batched, X, max_workers=12, chunksize=1)
     S_all, Z_all, F_all, D_all = zip(*results)
     S_all = sum(S_all, [])
     Z_all = sum(Z_all, [])
