@@ -20,6 +20,7 @@ dependencies = [
     "scipy>=1.17.1",
     "scipy-stubs>=1.17.1.4",
     "tqdm>=4.67.3",
+    "yapf>=0.43.0",
 ]
 
 [tool.pyright]
@@ -35,3 +36,15 @@ exclude = [
 
 defineConstant = { DEBUG = true }
 
+[tool.yapf]
+based_on_style = "google"
+split_before_expression_after_opening_paren = false
+SPLIT_COMPLEX_COMPREHENSION = false
+INDENT_CLOSING_BRACKETS = false
+continuation_indent_width = 4
+ALIGN_CLOSING_BRACKET_WITH_VISUAL_INDENT = false
+SPLIT_ARGUMENTS_WHEN_COMMA_TERMINATED = false
+SPLIT_ALL_COMMA_SEPARATED_VALUES = false
+SPLIT_ALL_TOP_LEVEL_COMMA_SEPARATED_VALUES = false
+SPLIT_BEFORE_NAMED_ASSIGNS = false
+column_limit = 120

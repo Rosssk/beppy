@@ -25,9 +25,9 @@ def main():
         p.add_flexure('C', (r * cos((i - .5) / n * 2 * pi), r * sin((i - .5) / n * 2 * pi), 0),
                       'B', (r * cos((i + .5) / n * 2 * pi), r * sin((i + .5) / n * 2 * pi), 0))
 
-    p.add_force('C', (0, 0, -4))
+        p.add_force('C', (0, 0, -4))
 
-    print(p.bodies)
+        print(p.bodies)
 
     # p.solve_pose('BC', A, E, I, method='Nelder-Mead', options={'maxiter': 10000, 'xatol': 1e-12, 'fatol': 1e-12})
     # print(p.solution)
