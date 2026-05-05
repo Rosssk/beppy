@@ -1,9 +1,9 @@
-from prbm2 import PRBM
+from prbm2 import Model
 from numpy import sin, cos, pi
 
 
 def main():
-    p = PRBM()
+    p = Model()
     mm = 1e-3
     cm = 1e-2
     h = 3 * cm
@@ -27,9 +27,11 @@ def main():
 
     p.add_force('C', (0, 0, -4))
 
-    p.solve_pose('BC', A, E, I, method='Nelder-Mead', options={'maxiter': 10000, 'xatol': 1e-12, 'fatol': 1e-12})
-    print(p.solution)
-    p.show()
+    print(p.bodies)
+
+    # p.solve_pose('BC', A, E, I, method='Nelder-Mead', options={'maxiter': 10000, 'xatol': 1e-12, 'fatol': 1e-12})
+    # print(p.solution)
+    # p.show()
 
 if __name__ == "__main__":
     main()
