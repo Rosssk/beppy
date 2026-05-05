@@ -27,9 +27,9 @@ def main():
 
     p.add_force('C', (0, 0, -4))
 
-    # p.solve_pose('BC', A, E, I, method='Nelder-Mead', options={'maxiter': 10000, 'xatol': 1e-12, 'fatol': 1e-12})
-    # print(p.solution)
-    # p.show()
+    p.solve_pose('BC', A, E, I, method='Nelder-Mead', options={'maxiter': 10000, 'xatol': 1e-12, 'fatol': 1e-12})
+    print(p.solution)
+    p.show()
 
 if __name__ == "__main__":
     main()
