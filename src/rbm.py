@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, NamedTuple
 
 import jax
 import jax.numpy as jnp
-from beartype import beartype
+from beartype.claw import beartype_package
 from jax import Array
-from jaxtyping import Float, jaxtyped
+from jaxtyping import Float, install_import_hook
 
 # PRBM constants
 GAMMA: Final[float] = 0.85
@@ -14,8 +14,11 @@ KAPPA_THETA: Final[float] = 2.65
 Vec3 = Float[Array, "3"]
 Mat33 = Float[Array, "3 3"]
 
+# TODO: disable when necessary
+install_import_hook("prbm", typechecker="beartype.beartype")
+beartype_package("prbm")
 
-@jaxtyped(typechecker=beartype)
+
 def rotmat(angles: Vec3) -> Mat33:
     """
     Compute a combined rotation matrix Rx @ Ry @ Rz for Euler angles [rx, ry, rz].
@@ -31,22 +34,15 @@ def rotmat(angles: Vec3) -> Mat33:
     """
     rx_val, ry_val, rz_val = angles
 
-    rx = jnp.array([
-        [1, 0, 0],
-        [0, jnp.cos(rx_val), -jnp.sin(rx_val)],
-        [0, jnp.sin(rx_val), jnp.cos(rx_val)],
-    ])
-    ry = jnp.array([
-        [jnp.cos(ry_val), 0, jnp.sin(ry_val)],
-        [0, 1, 0],
-        [-jnp.sin(ry_val), 0, jnp.cos(ry_val)],
-    ])
-    rz = jnp.array([
-        [jnp.cos(rz_val), -jnp.sin(rz_val), 0],
-        [jnp.sin(rz_val), jnp.cos(rz_val), 0],
-        [0, 0, 1],
-    ])
+    rx = jnp.array([[1, 0, 0], [0, jnp.cos(rx_val), -jnp.sin(rx_val)], [0, jnp.sin(rx_val), jnp.cos(rx_val)], ])
+    ry = jnp.array([[jnp.cos(ry_val), 0, jnp.sin(ry_val)], [0, 1, 0], [-jnp.sin(ry_val), 0, jnp.cos(ry_val)], ])
+    rz = jnp.array([[jnp.cos(rz_val), -jnp.sin(rz_val), 0], [jnp.sin(rz_val), jnp.cos(rz_val), 0], [0, 0, 1], ])
     return rx @ ry @ rz
+
+
+class Force(NamedTuple):
+    vector: Vec3
+    attach_point_local: Vec3
 
 
 @jax.tree_util.register_pytree_node_class
@@ -74,45 +70,29 @@ class Body:
 
     position: Vec3
     angles: Vec3
+
+    forces: list[Force] = field(default_factory=list)
     points: list[Vec3] = field(default_factory=lambda: [jnp.zeros(3)])
 
-    #
-    # Methods for jax pytree conversion
-    #
-    @staticmethod
-    def flatten(b: Body):
-        leaves = (b.position, b.angles, *b.points)
-        aux = (b.name, b.position_0, len(b.points))
+    def tree_flatten(self):
+        leaves = (self.position, self.angles)
+        aux = (self.name, self.position_0, self.forces, self.points)
         return leaves, aux
 
-    @staticmethod
-    def unflatten(aux, leaves):
-        name, position_0, _ = aux
-        position, angles, *points = leaves
-        return Body(name=name, position_0=position_0, position=position,
-                    angles=angles, points=list(points))
+    @classmethod
+    def tree_unflatten(cls, aux, leaves):
+        name, position_0, forces, points = aux
+        position, angles = leaves
+        return cls(name=name, position_0=position_0, position=position,
+                   angles=angles, forces=forces, points=points)
 
 
 @jax.tree_util.register_pytree_node_class
 @dataclass
 class Flexure:
     """
-    Represents a compliant flexure between two rigid bodies, modelled as a spring.
-
-    Spring geometry is derived automatically in __post_init__.
-
-    Attributes
-    ----------
-    body_a, body_b : Body
-        The two connected bodies.
-    attach_point_a_local, attach_point_b_local : Vec3
-        Attachment points in each body's local frame. Static.
-    gamma : float
-        PRBM characteristic radius factor. Static.
-    spring_len_0 : float
-        Natural (rest) length of the equivalent spring. Derived.
-    spring_a_dir_0, spring_b_dir_0 : Vec3
-        Unit vectors along the spring at rest, in each body's local frame. Derived.
+    Compliant flexure between two rigid bodies, modelled as a linear spring
+    connected to the bodies by torsional springs.
     """
 
     body_a: Body
@@ -174,77 +154,42 @@ class PRBM:
     """
 
     def __init__(self, gamma: float = GAMMA) -> None:
-        """
-        Parameters
-        ----------
-        gamma : float
-            PRBM characteristic radius factor (default 0.85).
-        """
         self.gamma = gamma
         self.bodies: dict[str, Body] = {}
         self.flexures: dict[str, Flexure] = {}
 
-    def add_body(self, name: str, position: Vec3 | None = None) -> Body:
+    def add_body(self, name: str, position: Vec3 | tuple[float, float, float] | None = None) -> None:
         """
         Add a rigid body to the model.
-
-        Parameters
-        ----------
-        name : str
-            Unique identifier for the body.
-        position : Vec3, optional
-            Initial global position. Defaults to the origin.
-
-        Returns
-        -------
-        Body
         """
         pos = jnp.zeros(3) if position is None else jnp.asarray(position, dtype=float)
-        body = Body(
-            name=name,
-            position_0=pos,
-            position=pos,
-            angles=jnp.zeros(3),
-        )
+        body = Body(name=name, position_0=pos, position=pos, angles=jnp.zeros(3))
         self.bodies[name] = body
-        return body
 
-    def add_flexure(
-            self,
-            body_name_a: str,
-            attach_point_a_local: Vec3,
-            body_name_b: str,
-            attach_point_b_local: Vec3,
-    ) -> Flexure:
+    def add_flexure(self, body_name_a: str, attach_point_a_local: Vec3 | tuple[float, float, float], body_name_b: str,
+                    attach_point_b_local: Vec3 | tuple[float, float, float], ) -> None:
         """
         Add a flexure (compliant spring element) between two bodies.
-
-        Parameters
-        ----------
-        body_name_a, body_name_b : str
-            Names of the two bodies to connect.
-        attach_point_a_local, attach_point_b_local : Vec3
-            Attachment points in each body's local frame.
-
-        Returns
-        -------
-        Flexure
-
-        Raises
-        ------
-        KeyError
-            If either body name is not found in the model.
         """
-        flexure = Flexure(
-            body_a=self.bodies[body_name_a],
-            body_b=self.bodies[body_name_b],
-            attach_point_a_local=jnp.asarray(attach_point_a_local, dtype=float),
-            attach_point_b_local=jnp.asarray(attach_point_b_local, dtype=float),
-            gamma=self.gamma,
-        )
+        body_a = self.bodies[body_name_a]
+        body_b = self.bodies[body_name_b]
+        attach_point_a_local = jnp.asarray(attach_point_a_local, dtype=float)
+        attach_point_b_local = jnp.asarray(attach_point_b_local, dtype=float)
+
+        flexure = Flexure(body_a, body_b, attach_point_a_local, attach_point_b_local, self.gamma)
+
+        # Add attachment points to respective bodies for display purposes
+        body_a.points.append(attach_point_a_local)
+        body_b.points.append(attach_point_b_local)
+
         name = self._unique_flexure_name(body_name_a, body_name_b)
         self.flexures[name] = flexure
-        return flexure
+
+    def add_force(self, body_name: str, force: Vec3 | tuple[float, float, float], attach_point_local: Vec3 | tuple[float, float, float] | None = None, ) -> None:
+        body = self.bodies[body_name]
+        pos = jnp.zeros(3) if attach_point_local is None else jnp.asarray(attach_point_local, dtype=float)
+        force = jnp.asarray(force, dtype=float)
+        body.forces.append((force, pos))
 
     def _unique_flexure_name(self, name_a: str, name_b: str) -> str:
         """Return a unique key for a flexure between two bodies."""
