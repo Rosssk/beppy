@@ -1,4 +1,4 @@
-from rbm import PRBM
+from prbm2 import PRBM
 from numpy import sin, cos, pi
 
 
