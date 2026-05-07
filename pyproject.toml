@@ -3,20 +3,22 @@ name = "beppy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "gpytorch>=1.15.2",
+    "beartype>=0.22.9",
+    "jax>=0.10.0",
+    "jaxtyping>=0.3.9",
     "matplotlib>=3.10.8",
+    "mujoco>=3.8.0",
     "numpy>=2.4.4",
     "opencv-python>=4.13.0.92",
     "optype>=0.17.0",
     "plotly>=6.7.0",
     "pydoe3>=1.6.2",
-    "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "scipy-stubs>=1.17.1.4",
-    "torch>=2.11.0",
     "tqdm>=4.67.3",
+    "yapf>=0.43.0",
 ]
 
 [tool.pyright]
@@ -29,6 +31,20 @@ exclude = [
     "src/experimental",
     "src/typestubs"
 ]
+reportMissingTypeStubs = false
+reportAttributeAccessIssue = false
 
 defineConstant = { DEBUG = true }
 
+[tool.yapf]
+based_on_style = "google"
+split_before_expression_after_opening_paren = false
+SPLIT_COMPLEX_COMPREHENSION = false
+INDENT_CLOSING_BRACKETS = false
+continuation_indent_width = 4
+ALIGN_CLOSING_BRACKET_WITH_VISUAL_INDENT = false
+SPLIT_ARGUMENTS_WHEN_COMMA_TERMINATED = false
+SPLIT_ALL_COMMA_SEPARATED_VALUES = false
+SPLIT_ALL_TOP_LEVEL_COMMA_SEPARATED_VALUES = false
+SPLIT_BEFORE_NAMED_ASSIGNS = false
+column_limit = 120
