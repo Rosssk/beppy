@@ -33,7 +33,7 @@ def _site(body, name, pos, color=None):
     site = body.add_site()
     site.name = name
     site.pos = pos
-    site.size = [1e-4, 1e-4, 1e-4]
+    site.size = [1e-3, 1e-3, 1e-3]
     if color is None:
         color = [1.0, 0.8, 0.0, 1.0]
     site.rgba = color
@@ -46,12 +46,12 @@ def _free(body):
 
 def main():
     # Parameters:
-    d = 1e-4  # flexure diameter
+    d = 2e-3 # flexure diameter
 
-    t = 5e-4  # platform thickness
-    h = 2.5e-3  # module height
+    t = 5e-3 # platform thickness
+    h = 2.5e-2 # module height
 
-    r = 1e-3  # attachment radius
+    r = 1e-2 # attachment radius
     E = 250e6  # Young's modulus
     v = 0.3  # Poisson's ratio
     rho = 1200  # density
@@ -84,20 +84,13 @@ def main():
     k_h_phys = k_h_fac * E * I0 / L_flex  # N·m/rad
     k_ex_phys = k_ex_fac * E * A0 / L_flex  # N/m
 
-    print(f"k_h_fac  = {k_h_fac:.4f}  (dimensionless)")
-    print(f"k_ex_fac = {k_ex_fac:.4f}  (dimensionless)")
-    print(f"k_h_phys = {k_h_phys:.3e} N·m/rad")
-    print(f"k_ex_phys= {k_ex_phys:.3e} N/m")
-
-    k_h = k_h_phys
-    k_ex = k_ex_phys
-
     m_flex = rho * A0 * L_flex
 
     spec = mujoco.MjSpec()
     spec.modelname = "prbm"
     spec.option.gravity = [0., 0., -9.81]
-    spec.option.timestep = 2e-4
+    # spec.option.gravity = [0, 0, 0]
+    spec.option.timestep = 2e-6
 
     body_a = _body(spec.worldbody, "body_a", [0, 0, 0], r, t,  rho)
     body_b = _body(spec.worldbody, "body_b", [0, 0, h / 2], r, t, rho)
@@ -171,7 +164,54 @@ def main():
     model = spec.compile()
     data = mujoco.MjData(model)
 
+    print(f"=== Geometry ===")
+    print(f"d (flexure diameter)     = {d * 1e3:.4f} mm")
+    print(f"t (platform thickness)   = {t * 1e3:.4f} mm")
+    print(f"h (module height)        = {h * 1e3:.4f} mm")
+    print(f"r (attachment radius)    = {r * 1e3:.4f} mm")
+    print(f"h_inter_platform         = {h_inter_platform * 1e3:.4f} mm")
+    print(f"L_flex                   = {L_flex * 1e3:.4f} mm")
 
+    print(f"\n=== Material ===")
+    print(f"E (Young's modulus)      = {E / 1e6:.1f} MPa")
+    print(f"nu (Poisson)             = {v}")
+    print(f"rho (density)            = {rho} kg/m³")
+
+    print(f"\n=== Beam cross-section ===")
+    print(f"I0                       = {I0:.3e} m⁴")
+    print(f"A0                       = {A0:.3e} m²")
+    print(f"f_bg (beam geom factor)  = {f_bg:.3e}")
+
+    print(f"\n=== PRBM coefficients ===")
+    print(f"gamma                    = {gamma:.4f}")
+    print(f"k_h_fac                  = {k_h_fac:.4f}")
+    print(f"k_ex_fac                 = {k_ex_fac:.4f}")
+
+    print(f"\n=== Physical stiffnesses ===")
+    print(f"k_h_phys  (bending)      = {k_h_phys:.3e} N·m/rad")
+    print(f"k_ex_phys (axial)        = {k_ex_phys:.3e} N/m")
+    print(f"stiffness ratio k_ex/k_h = {k_ex_phys / k_h_phys:.3e}  (target < 1e4)")
+
+    print(f"\n=== Mass ===")
+    vol_platform = (np.sqrt(3) / 4 * (2 * r) ** 2) * t
+    m_platform = rho * vol_platform
+    print(f"m_platform               = {m_platform:.3e} kg")
+    print(f"m_flex (per flexure)     = {m_flex:.3e} kg")
+    print(f"m_piv  (per pivot half)  = {m_flex / 2:.3e} kg")
+
+    print(f"\n=== Dynamics ===")
+    omega_axial = np.sqrt(k_ex_phys / m_platform)
+    omega_bend = np.sqrt(k_h_phys / (m_platform * r ** 2))
+    T_axial = 2 * np.pi / omega_axial
+    T_bend = 2 * np.pi / omega_bend
+    dt = spec.option.timestep
+    print(f"omega_axial              = {omega_axial:.3e} rad/s")
+    print(f"omega_bend               = {omega_bend:.3e} rad/s")
+    print(f"T_axial (fastest period) = {T_axial * 1e6:.2f} μs")
+    print(f"T_bend                   = {T_bend * 1e3:.4f} ms")
+    print(f"timestep                 = {dt * 1e6:.2f} μs")
+    print(f"steps per axial period   = {T_axial / dt:.1f}  (need > 20)")
+    print(f"steps per bend period    = {T_bend / dt:.1f}")
 
     mujoco.viewer.launch(model, data)
 
