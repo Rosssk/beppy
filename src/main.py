@@ -42,11 +42,6 @@ Notes on Kane's method formulation
 import sympy as sp
 from sympy import symbols, cos, sin, sqrt, Matrix, Rational
 from sympy import lambdify, trigsimp
-from sympy.physics.mechanics import (
-    dynamicsymbols, ReferenceFrame, Point,
-    RigidBody, Particle, KanesMethod,
-    inertia, dot
-)
 import numpy as np
 from scipy.integrate import solve_ivp
 import time
@@ -86,28 +81,57 @@ _BETA1   = Rational(1, 2)
 _BETA_P  = Rational(1, 2)
 _BETA2   = Rational(1, 2)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Step 1: Generalised coordinates, speeds, and reference frames
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
+def rotmat(body_state):
+    """
+    Return a rotation matrix, takes the 1x6 body state
+    """
+    phi, theta, psi = body_state[3], body_state[4], body_state[5]
+    R_X = Matrix([[1,0,0],[0,cos(phi),-sin(phi)],[0,sin(phi),cos(phi)]])
+    R_Y = Matrix([[cos(theta),0,sin(theta)],[0,1,0],[-sin(theta),0,cos(theta)]])
+    R_Z = Matrix([[cos(psi),-sin(psi),0],[sin(psi),cos(psi),0],[0,0,1]])
+    return R_Z * R_Y * R_X
+
+def global_pos(body_state, local_vec):
+    """
+    Transform local coordinate vector into global coordinate
+    """
+    body_pos = Matrix([body_state[:3]])
+    return body_pos + local_vec*rotmat(body_state)
+
+x2, y2, z2, psi2, theta2, phi2 = sp.symbols('x2 y2 z2 psi2, theta2, phi2')
+x3, y3, z3, psi3, theta3, phi3 = sp.symbols('x3 y3 z3 psi3, theta3, phi3')
+q_b1 = Matrix([[0,0,0,0,0,0]])
+q_b2_0 = Matrix([[0,0,h/2,0,0,0]])
+q_b2 = Matrix([[x2, y2, z2, psi2, theta2, phi2]])
+q_b3_0 = Matrix([[0,0,h,0,0,0]])
+q_b3 = Matrix([[x3, y3, z3, psi3, theta3, phi3]])
 
 print("Step 1: Coordinates and frames...")
 t0_build = time.time()
-
 t = symbols('t')
 
 # Generalised coordinates
-x2, y2, z2, phi2, th2, ps2 = dynamicsymbols('x2 y2 z2 phi2 theta2 psi2')
-x3, y3, z3, phi3, th3, ps3 = dynamicsymbols('x3 y3 z3 phi3 theta3 psi3')
-
+x2, y2, z2, phi2, th2, ps2 = symbols('x2 y2 z2 phi2 theta2 psi2')
+x3, y3, z3, phi3, th3, ps3 = symbols('x3 y3 z3 phi3 theta3 psi3')
 q = [x2, y2, z2, phi2, th2, ps2,
      x3, y3, z3, phi3, th3, ps3]
 
 # Generalised speeds (= qdot, simplest choice)
-u2x, u2y, u2z, u2ph, u2th, u2ps = dynamicsymbols('u2x u2y u2z u2ph u2th u2ps')
-u3x, u3y, u3z, u3ph, u3th, u3ps = dynamicsymbols('u3x u3y u3z u3ph u3th u3ps')
-
+u2x, u2y, u2z, u2ph, u2th, u2ps = symbols('u2x u2y u2z u2ph u2th u2ps')
+u3x, u3y, u3z, u3ph, u3th, u3ps = symbols('u3x u3y u3z u3ph u3th u3ps')
 u = [u2x, u2y, u2z, u2ph, u2th, u2ps,
           u3x, u3y, u3z, u3ph, u3th, u3ps]
+
+
+links = []
+for i in range(3):
+
+
+
+
 
 kd_eqs = [ui - qi.diff(t) for ui,qi in zip(u, q)]
 _d2u   = {qi.diff(t): ui for qi,ui in zip(q, u)}
