@@ -8,21 +8,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 
 class ForceGenerator2:
-    def __init__(self, width: float, height: float, safety_margin: float, r_min: float, r_max: float, smoothness: float = 1.2, sphere_factor: float = 1.2, normal_peak: float = 125000, shear_peak: float = 2500):
-        """Create source for random force distributions
-
-        Args:
-            width: Width of region
-            height: Height of region
-            safety_margin: Distance from edge that the centre of a force area should be
-            r_min: Minimum radius of force area
-            r_max: Maximum radius of force area
-            smoothness: todo, Defaults to 1.2.
-            sphere_factor: todo. Defaults to 1.2.
-            normal_peak: Peak normal force. Defaults to 125000.
-            shear_peak: Peak shear force. Defaults to 2500.
-        """
-        
+    def __init__(self, width: float, height: float, safety_margin: float, r_min: float, r_max: float, smoothness: float = 1.2, sphere_factor: float = 1.2, normal_peak: float = 125000, shear_peak: float = 2500, density: float = 0.1):
         self.width: float = width
         self.height: float = height
         self.safety_margin: float = safety_margin
@@ -32,7 +18,12 @@ class ForceGenerator2:
         self.sphere_factor: float = sphere_factor
         self.normal_peak: float = normal_peak
         self.shear_peak: float = shear_peak
-        self.reroll()
+
+        self.x0, self.y0 = np.random.uniform(0.03, 0.07, 2)
+        self.rx, self.ry = np.random.uniform(0.02, 0.03, 2)
+        r_avg = (self.rx + self.ry) / 2.0
+        volume = 4/3 * np.pi * self.rx * self.ry * r_avg # volume ellipsoid
+        self.g = density*volume * 9.81 * (np.random.uniform(0.95, 1.05)) / (np.pi * self.rx * self.ry) # force / area by g
 
     def __call__(self, x: float, y: float):
         x0, y0, rx, ry = self.x0, self.y0, self.rx, self.ry
@@ -52,7 +43,7 @@ class ForceGenerator2:
             shear_x *= 1 + np.random.normal(0, 0.05)
             shear_y *= 1 + np.random.normal(0, 0.05)
 
-            # shear_y += self.g_total * 200
+            shear_y += self.g
         else:
             shear_x = 0
             shear_y = 0
@@ -83,7 +74,7 @@ class ForceGenerator2:
 
         # Map 3: Schuifkracht Y-Component (Inclusief Zwaartekracht)
         im3 = axes[2].pcolormesh(X, Y, shear_y_grid, cmap='RdBu_r', shading='auto', vmin=np.min(shear_y_grid), vmax=np.max(shear_y_grid))
-        axes[2].set_title(f"Schuifkracht Y-Component\n(Incl. {self.g_total:.1f}g)")
+        axes[2].set_title(f"Schuifkracht Y-Component\n(Incl. {self.g:.1f}g)")
         axes[2].set_aspect('equal')
         fig.colorbar(im3, ax=axes[2])
 
@@ -91,7 +82,8 @@ class ForceGenerator2:
         plt.show()
 
 def main():
-    ForceGenerator2(0.3, 0.3, 0.03, 0.01, 0.05).show()
+    peak_normal = 5 / (0.01 * 0.01) # N/m^2 - hier dus 5N / cm^2
+    ForceGenerator2(0.1, 0.1, 0.03, 0.01, 0.02, normal_peak = peak_normal, shear_peak = peak_normal*0.2).show()
 
 
 if __name__ == "__main__":

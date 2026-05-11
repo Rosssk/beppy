@@ -31,7 +31,7 @@ def init_rbm():
     return p
 
 _prev_guess = None
-def solve_module(force_vec):
+def solve_module(force_vec, upside_down):
     global _prev_guess
     t = mm
     A = pi*t**2
@@ -45,9 +45,16 @@ def solve_module(force_vec):
         _prev_guess = p.solution.x
     
     l = 4*mm
-    c1 = p.bodies['B'].rotmat@np.array([0, l, -0.5*depth]) + p.bodies['B'].position
-    c2 = p.bodies['B'].rotmat@np.array([-l*cos(pi/6), -l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
-    c3 = p.bodies['B'].rotmat@np.array([l*cos(pi/6), -l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
+
+    if upside_down:
+        c1 = p.bodies['B'].rotmat@np.array([0, l, -0.5*depth]) + p.bodies['B'].position
+        c2 = p.bodies['B'].rotmat@np.array([-l*cos(pi/6), -l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
+        c3 = p.bodies['B'].rotmat@np.array([l*cos(pi/6), -l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
+    else:
+        c1 = p.bodies['B'].rotmat@np.array([0, -l, -0.5*depth]) + p.bodies['B'].position
+        c2 = p.bodies['B'].rotmat@np.array([-l*cos(pi/6), l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
+        c3 = p.bodies['B'].rotmat@np.array([l*cos(pi/6), l*sin(pi/6), -0.5*depth]) + p.bodies['B'].position
+
     return (c1, c2, c3)
 
 
