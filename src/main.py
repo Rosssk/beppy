@@ -1,9 +1,4 @@
-# pyright: strict
-
-from calendar import c
-
 import numpy as np
-from numpy import c_
 
 from forces2 import ForceGenerator2
 from trigrid import TriangleGrid
@@ -28,7 +23,9 @@ def main():
     # forceg = ForceGenerator(tris.width()*2, tris.height(), tris.height()*0.1, tris.width()*0.15, tris.width()*0.2, 3, 0, 15, -4, 4, -4, 4)
     # forceg = ForceGenerator2(tris.width*2, tris.height, tris.height*0.3, tris.width*0.15, tris.width*0.2)
     peak_normal = 5 / (0.01 * 0.01) # N/m^2 - hier dus 5N / cm^2
+    # peak_normal = 0 # Max krachten op 0 om de basisopstelling te krijgen
     forceg = ForceGenerator2(0.1, 0.1, 0.03, 0.01, 0.02, normal_peak=peak_normal, shear_peak=peak_normal * 0.2)
+
     forceg.show()
 
     plt.figure(figsize=(10, 10))
@@ -53,11 +50,19 @@ def main():
             (tc_x, tc_y) = tris.get_triangle_center(i, j)
             original_center = [tc_x, tc_y, 0]
             c1 += original_center
-            c2 += original_center      
+            c2 += original_center
             c3 += original_center
             plt.fill([c1[0], c2[0], c3[0]], [c1[1], c2[1], c3[1]], color="black")
-            corners.append([c1, c2, c3])
+            corners_row.append([c1, c2, c3])
         corners.append(corners_row)
+
+    # Alle hoekposities opslaan.
+    # Is een 4D array:
+    # driehoek = hoeken[i][j]
+    # waar driehoek een lijst van 3 punten is, en elk punt is 3 getallen: de x y z coordinaten
+    #
+    # Je kan hem laden met np.load()
+    np.save("hoeken_start.npy", np.array(corners))
             
 
 
