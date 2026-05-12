@@ -3,19 +3,16 @@ name = "beppy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "gpytorch>=1.15.2",
     "matplotlib>=3.10.8",
     "numpy>=2.4.4",
     "opencv-python>=4.13.0.92",
     "optype>=0.17.0",
     "plotly>=6.7.0",
     "pydoe3>=1.6.2",
-    "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "scipy-stubs>=1.17.1.4",
-    "torch>=2.11.0",
     "tqdm>=4.67.3",
 ]
 
@@ -31,4 +28,14 @@ exclude = [
 ]
 
 defineConstant = { DEBUG = true }
+[tool.pixi.workspace]
+channels = ["conda-forge", "projectchrono"]
+platforms = ["win-64"]
 
+[tool.pixi.pypi-dependencies]
+beppy = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+pychrono = ">=10.0.0,<11"
