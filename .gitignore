@@ -5,3 +5,4 @@ __pycache__
 .pixi/*
 !.pixi/config.toml
 */*.egg-info
+chrono
