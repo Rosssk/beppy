@@ -36,7 +36,7 @@ def solve_module(force_vec, upside_down):
     t = mm
     A = pi*t**2
     E = 850e6 # Pa
-    I = 0.1*pi*t**4/2
+    I = 0.1*pi*(1e-3)**4/2
 
     p = init_rbm()
     p.add_force('C', force_vec)
